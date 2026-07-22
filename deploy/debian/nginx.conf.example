@@ -15,6 +15,8 @@ server {
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
+        fastcgi_param HTTP_X_FORWARDED_PROTO $http_x_forwarded_proto;
+        fastcgi_param HTTP_X_FORWARDED_HOST $http_x_forwarded_host;
         fastcgi_pass unix:/run/php/php8.3-fpm.sock;
     }
 
