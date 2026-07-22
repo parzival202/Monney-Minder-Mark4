@@ -1,0 +1,15 @@
+[Unit]
+Description=MoneyMinder scheduled tasks
+After=network.target postgresql.service php8.3-fpm.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/moneyminder
+ExecStart=/usr/bin/php artisan schedule:work
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

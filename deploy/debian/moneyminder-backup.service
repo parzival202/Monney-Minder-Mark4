@@ -1,0 +1,9 @@
+[Unit]
+Description=Backup MoneyMinder PostgreSQL database
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=root
+EnvironmentFile=/var/www/moneyminder/.env
+ExecStart=/var/www/moneyminder/deploy/debian/backup.sh
