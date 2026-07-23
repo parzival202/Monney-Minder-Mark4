@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
+import AccountIcon from '@/Components/AccountIcon';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 
@@ -50,7 +51,7 @@ function ExpenseRow({ expense, accounts, categories }: { expense: Expense; accou
 
     return (
         <article className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-3"><span className="h-10 w-2 rounded-full" style={{ backgroundColor: expense.expense_category?.color ?? '#64748b' }} /><div><p className="font-semibold text-slate-900">{expense.description}</p><p className="text-xs text-slate-500">{expense.expense_category?.name ?? 'Catégorie retirée'} · {expense.financial_account?.name} · {new Date(expense.occurred_on).toLocaleDateString('fr-FR')}</p></div></div>
+            <div className="flex items-center gap-3"><AccountIcon account={expense.financial_account} className="h-10 w-10"/><div><p className="font-semibold text-slate-900">{expense.description}</p><p className="text-xs text-slate-500"><span className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ backgroundColor: expense.expense_category?.color ?? '#64748b' }}/>{expense.expense_category?.name ?? 'Catégorie retirée'} · {expense.financial_account?.name} · {new Date(expense.occurred_on).toLocaleDateString('fr-FR')}</p></div></div>
             <div className="flex flex-wrap items-center gap-3"><span className={`rounded-full px-3 py-1 text-xs font-semibold ${expense.purchase_nature === 'impulsive' ? 'bg-rose-100 text-rose-700' : expense.purchase_nature === 'unplanned_necessary' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{natureLabels[expense.purchase_nature]}</span><strong className="text-rose-700">−{money(expense.amount)}</strong><button onClick={() => setEditing(true)} className="text-sm font-semibold text-emerald-700">Modifier</button><button onClick={() => confirm('Supprimer cette dépense ? Le disponible sera restauré.') && router.delete(route('expenses.destroy', expense.id), { preserveScroll: true })} className="text-sm font-semibold text-rose-600">Supprimer</button></div>
         </article>
     );

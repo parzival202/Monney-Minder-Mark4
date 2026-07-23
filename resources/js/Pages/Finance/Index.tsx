@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
+import AccountIcon from '@/Components/AccountIcon';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 
@@ -31,7 +32,7 @@ function AccountRow({ account, canDelete }: { account: Account; canDelete: boole
 
     return (
         <div className="flex flex-col justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
-            <div><p className="font-semibold text-slate-900">{account.name}</p><p className="text-xs text-slate-500">{account.included_in_planning ? 'Inclus dans les calculs' : 'Exclu des calculs'}</p></div>
+            <div className="flex items-center gap-3"><AccountIcon account={account} /><div><p className="font-semibold text-slate-900">{account.name}</p><p className="text-xs text-slate-500">{account.included_in_planning ? 'Inclus dans les calculs' : 'Exclu des calculs'}</p></div></div>
             <div className="flex items-center gap-3"><strong>{money(account.opening_balance_amount)}</strong><button onClick={() => setEditing(true)} className="text-sm font-semibold text-emerald-700">Modifier</button>{canDelete && <button onClick={() => confirm('Supprimer ce compte ?') && router.delete(route('finances.accounts.destroy', account.id), { preserveScroll: true })} className="text-sm font-semibold text-rose-600">Supprimer</button>}</div>
         </div>
     );

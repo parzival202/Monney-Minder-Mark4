@@ -1,4 +1,5 @@
 import InputError from '@/Components/InputError';
+import AccountIcon from '@/Components/AccountIcon';
 import { useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useEffect, useState } from 'react';
 
@@ -31,7 +32,7 @@ export default function QuickExpense() {
                     <label className="text-sm font-semibold sm:col-span-2">Qu’as-tu acheté ?<input autoFocus className={field} value={form.data.description} onChange={event => form.setData('description', event.target.value)} placeholder="Ex. Déjeuner" /></label>
                     <label className="text-sm font-semibold">Montant<input type="number" min="1" inputMode="numeric" className={field} value={form.data.amount || ''} onChange={event => form.setData('amount', Number(event.target.value))} placeholder="0" /></label>
                     <label className="text-sm font-semibold">Catégorie<select className={field} value={form.data.expense_category_id} onChange={event => form.setData('expense_category_id', Number(event.target.value))}>{categories.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-                    <label className="text-sm font-semibold">Compte<select className={field} value={form.data.financial_account_id} onChange={event => form.setData('financial_account_id', Number(event.target.value))}>{accounts.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+                    <fieldset className="sm:col-span-2"><legend className="text-sm font-semibold">Compte utilisé</legend><div className="mt-2 grid gap-2 sm:grid-cols-3">{accounts.map(item=><button type="button" key={item.id} onClick={()=>form.setData('financial_account_id',item.id)} className={`flex items-center gap-2 rounded-xl border p-2.5 text-left text-sm font-semibold transition ${form.data.financial_account_id===item.id?'border-[#8d73cf] bg-[#f3f0f8] text-[#5a3da9]':'border-slate-200 bg-white text-slate-600'}`}><AccountIcon account={item} className="h-8 w-8 shrink-0"/><span className="truncate">{item.name}</span></button>)}</div></fieldset>
                     <label className="text-sm font-semibold">Type<select className={field} value={form.data.purchase_nature} onChange={event => form.setData('purchase_nature', event.target.value)}><option value="planned">Prévue</option><option value="unplanned_necessary">Imprévue nécessaire</option><option value="impulsive">Impulsive</option></select></label>
                     <InputError message={form.errors.description || form.errors.amount || form.errors.financial_account_id || form.errors.expense_category_id} className="sm:col-span-2" />
                     <button disabled={form.processing} className="rounded-xl bg-[#6d4cc7] px-5 py-3 font-semibold text-white hover:bg-[#5f42ae] sm:col-span-2">{form.processing ? 'Enregistrement…' : 'Enregistrer la dépense'}</button>
