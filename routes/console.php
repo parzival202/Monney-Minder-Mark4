@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('money-minder:send-daily-summaries')->dailyAt('07:30')->withoutOverlapping();
+Schedule::command('money-minder:telegram-companion')->hourly()->withoutOverlapping();

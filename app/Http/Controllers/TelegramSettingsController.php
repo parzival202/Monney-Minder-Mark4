@@ -36,7 +36,7 @@ class TelegramSettingsController extends Controller
         $existing = $request->user()->telegramConnection;
         $request->user()->telegramConnection()->updateOrCreate([], [
             ...$data, 'webhook_secret' => $existing?->webhook_secret ?: Str::random(48),
-            'is_active' => true, 'notification_preferences' => ['decision_alerts' => true, 'daily_summary' => true],
+            'is_active' => true, 'notification_preferences' => ['decision_alerts' => true, 'daily_summary' => true, 'ambient_nudges' => true],
         ]);
         return back()->with('success', 'Connexion Telegram enregistrée de manière chiffrée.');
     }
@@ -51,7 +51,7 @@ class TelegramSettingsController extends Controller
 
     public function preferences(Request $request): RedirectResponse
     {
-        $data = $request->validate(['daily_summary' => ['required', 'boolean'], 'decision_alerts' => ['required', 'boolean']]);
+        $data = $request->validate(['daily_summary' => ['required', 'boolean'], 'decision_alerts' => ['required', 'boolean'], 'ambient_nudges' => ['required', 'boolean']]);
         $request->user()->telegramConnection()->firstOrFail()->update(['notification_preferences' => $data]);
         return back()->with('success', 'Préférences Telegram mises à jour.');
     }

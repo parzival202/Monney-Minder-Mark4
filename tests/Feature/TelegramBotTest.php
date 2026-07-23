@@ -128,6 +128,19 @@ class TelegramBotTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_companion_can_send_a_contextual_spontaneous_message(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+        ['user' => $user, 'connection' => $connection] = $this->context();
+        $user->financialProfile()->update(['monthly_budget_amount' => 300_000]);
+        $connection->update(['verified_at' => now(), 'notification_preferences' => ['ambient_nudges' => true]]);
+
+        $this->artisan('money-minder:telegram-companion', ['--user' => $user->email, '--force' => true])->assertSuccessful();
+
+        $this->assertDatabaseHas('telegram_messages', ['telegram_connection_id' => $connection->id, 'kind' => 'ambient_nudge']);
+        Http::assertSentCount(1);
+    }
+
     public function test_connection_token_is_encrypted_and_never_shared_with_the_page(): void
     {
         ['user' => $user] = $this->context();
