@@ -13,6 +13,7 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\TelegramSettingsController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\BudgetCycleController;
+use App\Http\Controllers\BudgetCycleArchiveController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -36,6 +37,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/finances', FinanceOverviewController::class)->name('finances.index');
     Route::patch('/finances/budget-cycle', [BudgetCycleController::class, 'update'])->name('finances.budget-cycle.update');
+    Route::get('/archives', [BudgetCycleArchiveController::class, 'index'])->name('archives.index');
+    Route::post('/archives', [BudgetCycleArchiveController::class, 'store'])->name('archives.store');
+    Route::patch('/archives/preferences', [BudgetCycleArchiveController::class, 'updatePreference'])->name('archives.preferences.update');
     Route::post('/finances/accounts', [FinancialAccountController::class, 'store'])->name('finances.accounts.store');
     Route::put('/finances/accounts/{financialAccount}', [FinancialAccountController::class, 'update'])->name('finances.accounts.update');
     Route::delete('/finances/accounts/{financialAccount}', [FinancialAccountController::class, 'destroy'])->name('finances.accounts.destroy');

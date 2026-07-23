@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('money-minder:send-daily-summaries')->dailyAt('07:30')->withoutOverlapping();
 Schedule::command('money-minder:telegram-companion')->hourly()->withoutOverlapping();
+Schedule::command('money-minder:archive-cycles')->dailyAt('00:15')->withoutOverlapping();

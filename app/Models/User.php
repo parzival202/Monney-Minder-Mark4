@@ -64,4 +64,5 @@ class User extends Authenticatable
     public function telegramConnection(): HasOne { return $this->hasOne(TelegramConnection::class); }
     public function telegramMessages(): HasMany { return $this->hasMany(TelegramMessage::class); }
     public function telegramConversation(): HasOne { return $this->hasOne(TelegramConversation::class); }
+    public function budgetCycleArchives(): HasMany { return $this->hasMany(BudgetCycleArchive::class); }
 }

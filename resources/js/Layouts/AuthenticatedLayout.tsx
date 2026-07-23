@@ -59,6 +59,12 @@ export default function Authenticated({
                                 >
                                     Telegram
                                 </NavLink>
+                                <NavLink
+                                    href={route('archives.index')}
+                                    active={route().current('archives.*')}
+                                >
+                                    Archives
+                                </NavLink>
                             </div>
                         </div>
 
@@ -186,6 +192,12 @@ export default function Authenticated({
                             active={route().current('telegram.*')}
                         >
                             Telegram
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('archives.index')}
+                            active={route().current('archives.*')}
+                        >
+                            Archives
                         </ResponsiveNavLink>
                     </div>
 

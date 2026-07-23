@@ -46,7 +46,7 @@ class TelegramBotTest extends TestCase
     public function test_bot_creates_assesses_and_reserves_a_project_through_the_guided_flow(): void
     {
         Http::fake(['api.telegram.org/*' => Http::response(['ok' => true, 'result' => []])]);
-        ['connection' => $connection] = $this->context();
+        ['user' => $user, 'connection' => $connection] = $this->context();
 
         $this->message($connection, 1, '/projet Sortie cinéma');
         $this->message($connection, 2, '/budget 40000');
@@ -67,12 +67,17 @@ class TelegramBotTest extends TestCase
     public function test_bot_assesses_a_project_from_one_complete_message(): void
     {
         Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
-        ['connection' => $connection] = $this->context();
+        ['user' => $user, 'connection' => $connection] = $this->context();
 
         $this->message($connection, 10, '/projet Sortie plage /budget 40000 /date '.today()->addDays(10)->format('d/m/Y'));
 
         $this->assertDatabaseHas('spending_projects', ['name' => 'Sortie plage', 'target_amount' => 40_000, 'source' => 'telegram']);
         $this->assertDatabaseCount('decision_assessments', 1);
+        $this->actingAs($user)->get('/projects')->assertInertia(fn ($page) => $page
+            ->component('Projects/Index')
+            ->has('projects', 1)
+            ->where('projects.0.name', 'Sortie plage')
+            ->where('projects.0.source', 'telegram'));
         Http::assertSentCount(1);
     }
 
