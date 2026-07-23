@@ -16,6 +16,7 @@ function GenericIcon({ type, ...props }: { type?: string } & SVGProps<SVGSVGElem
 export default function AccountIcon({ account, className = 'h-11 w-11' }: { account?: AccountLike; className?: string }) {
     const name = normalized(account?.name);
     if (name.includes('wave')) return <img src="/account-icons/wave.png" alt="Wave" className={`${className} rounded-xl object-cover`} />;
+    if (name.includes('orange money') || name === 'orange' || name.includes('orangemoney')) return <img src="/account-icons/orange-money.png" alt="Orange Money" className={`${className} rounded-xl object-cover`} />;
     if (/(^|\s)sib($|\s)/.test(name) || name.includes('societe ivoirienne de banque')) return <img src="/account-icons/sib.jpg" alt="SIB" className={`${className} rounded-xl object-cover`} />;
     if (name.includes('principal') || account?.type === 'main') return <WalletIcon className={className} />;
     return <GenericIcon type={account?.type} className={className} />;

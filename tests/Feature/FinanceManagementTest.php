@@ -112,4 +112,26 @@ class FinanceManagementTest extends TestCase
             ->get('/finances')
             ->assertInertia(fn ($page) => $page->where('position.current_balance', 100_000));
     }
+
+    public function test_orange_money_is_added_once_to_an_existing_user_as_mobile_money(): void
+    {
+        $user = $this->onboardedUser();
+        $migration = require database_path('migrations/2026_07_23_230000_add_orange_money_account_to_existing_users.php');
+
+        $migration->up();
+        $migration->up();
+
+        $this->assertDatabaseHas('financial_accounts', [
+            'user_id' => $user->id,
+            'name' => 'Orange Money',
+            'type' => 'mobile_money',
+            'opening_balance_amount' => 0,
+            'included_in_planning' => true,
+            'is_active' => true,
+        ]);
+        $this->assertSame(1, FinancialAccount::query()
+            ->where('user_id', $user->id)
+            ->where('name', 'Orange Money')
+            ->count());
+    }
 }
