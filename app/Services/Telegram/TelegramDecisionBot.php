@@ -52,7 +52,11 @@ final class TelegramDecisionBot
     {
         $user = $connection->user;
         $conversation = $user->telegramConversation()->firstOrCreate([], ['state' => 'idle', 'data' => []]);
-        if (preg_match('/^\/projet\s*(.+)$/iu', $text, $matches)) {
+        if (preg_match('/^\/projet\s+(.+?)\s+\/budget\s+([\d\s.,]+?)\s+\/date\s+(\d{1,2}\/\d{1,2}(?:\/\d{4})?)\s*$/iu', $text, $matches)) {
+            $this->assessProject($connection, $conversation, trim($matches[1]), (int) preg_replace('/\D/', '', $matches[2]), $matches[3]);
+            return;
+        }
+        if (preg_match('/^\/projet\s+(.+)$/iu', $text, $matches)) {
             $name = trim($matches[1]);
             $conversation->update(['state' => 'project', 'data' => ['name' => $name], 'last_interaction_at' => now()]);
             $this->client->send($connection, "Projet « {$name} » créé. Envoie /budget 40000.");
@@ -69,18 +73,7 @@ final class TelegramDecisionBot
         if (preg_match('/^\/date\s+(\d{1,2}\/\d{1,2}(?:\/\d{4})?)$/iu', $text, $matches)) {
             $data = $conversation->data ?? [];
             if (empty($data['name']) || empty($data['amount'])) { $this->client->send($connection, 'Il manque le projet ou son budget. Utilise /projet puis /budget.'); return; }
-            $date = $this->date($matches[1]);
-            if (!$date || $date->isBefore(today())) { $this->client->send($connection, 'Date invalide ou déjà passée. Exemple : /date 27/07/2027.'); return; }
-            $project = $user->spendingProjects()->create([
-                'name' => $data['name'], 'target_amount' => $data['amount'], 'target_date' => $date,
-                'priority' => 'want', 'status' => 'assessed', 'source' => 'telegram',
-            ]);
-            $assessment = $this->assessments->assess($user, $project, 'telegram');
-            $conversation->update(['state' => 'idle', 'data' => [], 'last_interaction_at' => now()]);
-            $text = $this->verdict($assessment->verdict).' '.Str::of($assessment->summary)->replaceMatches('/(-?\d+)/', fn ($m) => number_format((int) $m[1], 0, ',', ' ').' FCFA');
-            $keyboard = in_array($assessment->verdict, ['approved', 'caution'], true)
-                ? [[['text' => '✅ Réserver la somme', 'callback_data' => "reserve:{$project->id}"], ['text' => 'Pas maintenant', 'callback_data' => "dismiss:{$project->id}"]]] : null;
-            $this->client->send($connection, $text, $keyboard);
+            $this->assessProject($connection, $conversation, $data['name'], (int) $data['amount'], $matches[1]);
             return;
         }
         if (preg_match('/^\/depense\s+([\d\s.,]+)\s+(.+)$/iu', $text, $matches)) {
@@ -110,10 +103,27 @@ final class TelegramDecisionBot
             return;
         }
         if (in_array(Str::lower($text), ['/start', '/aide', '/help'], true)) {
-            $this->client->send($connection, "Je peux décider et enregistrer avec toi.\n\nProjet :\n1. /projet Sortie\n2. /budget 40000\n3. /date 27/07\n\nDépense réelle :\n/depense 2500 Déjeuner\n\nConsultation : /solde · /projets\nAnnuler : /annuler");
+            $this->client->send($connection, "Je peux décider et enregistrer avec toi.\n\nSimulation en un message :\n/projet Cinéma /budget 40000 /date 27/07\n\nOu étape par étape :\n1. /projet Cinéma\n2. /budget 40000\n3. /date 27/07\n\nDépense réelle :\n/depense 2500 Déjeuner\n\nConsultation : /solde · /projets\nAnnuler : /annuler");
             return;
         }
         $this->client->send($connection, 'Commande inconnue. Envoie /aide pour voir le parcours de décision.');
+    }
+
+    private function assessProject(TelegramConnection $connection, $conversation, string $name, int $amount, string $dateValue): void
+    {
+        if ($name === '' || $amount < 1) { $this->client->send($connection, 'Le nom et le budget du projet sont obligatoires.'); return; }
+        $date = $this->date($dateValue);
+        if (!$date || $date->isBefore(today())) { $this->client->send($connection, 'Date invalide ou déjà passée. Exemple : /date 27/07/2027.'); return; }
+        $project = $connection->user->spendingProjects()->create([
+            'name' => $name, 'target_amount' => $amount, 'target_date' => $date,
+            'priority' => 'want', 'status' => 'assessed', 'source' => 'telegram',
+        ]);
+        $assessment = $this->assessments->assess($connection->user, $project, 'telegram');
+        $conversation->update(['state' => 'idle', 'data' => [], 'last_interaction_at' => now()]);
+        $message = $this->verdict($assessment->verdict).' '.Str::of($assessment->summary)->replaceMatches('/(-?\d+)/', fn ($m) => number_format((int) $m[1], 0, ',', ' ').' FCFA');
+        $keyboard = in_array($assessment->verdict, ['approved', 'caution'], true)
+            ? [[['text' => '✅ Réserver la somme', 'callback_data' => "reserve:{$project->id}"], ['text' => 'Pas maintenant', 'callback_data' => "dismiss:{$project->id}"]]] : null;
+        $this->client->send($connection, $message, $keyboard);
     }
 
     private function callback(TelegramConnection $connection, string $data): void

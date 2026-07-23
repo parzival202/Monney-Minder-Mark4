@@ -64,6 +64,29 @@ class TelegramBotTest extends TestCase
         Http::assertSentCount(4);
     }
 
+    public function test_bot_assesses_a_project_from_one_complete_message(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+        ['connection' => $connection] = $this->context();
+
+        $this->message($connection, 10, '/projet Sortie plage /budget 40000 /date '.today()->addDays(10)->format('d/m/Y'));
+
+        $this->assertDatabaseHas('spending_projects', ['name' => 'Sortie plage', 'target_amount' => 40_000, 'source' => 'telegram']);
+        $this->assertDatabaseCount('decision_assessments', 1);
+        Http::assertSentCount(1);
+    }
+
+    public function test_projects_listing_is_never_mistaken_for_project_creation(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+        ['connection' => $connection] = $this->context();
+
+        $this->message($connection, 11, '/projets');
+
+        $this->assertDatabaseCount('spending_projects', 0);
+        Http::assertSent(fn ($request) => str_contains((string) $request['text'], 'Aucun projet actif'));
+    }
+
     public function test_webhook_rejects_wrong_secret_and_wrong_chat(): void
     {
         Http::fake();
