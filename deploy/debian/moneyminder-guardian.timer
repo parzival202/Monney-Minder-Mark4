@@ -1,0 +1,12 @@
+[Unit]
+Description=Check MoneyMinder every five minutes
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=5min
+AccuracySec=15s
+Persistent=true
+Unit=moneyminder-guardian.service
+
+[Install]
+WantedBy=timers.target

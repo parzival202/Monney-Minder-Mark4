@@ -71,3 +71,22 @@ php artisan migrate --force
 php artisan optimize
 sudo systemctl reload php8.3-fpm nginx
 ```
+
+## 6. Démarrage, surveillance et mises à jour automatiques
+
+Le gardien systemd démarre les services au boot, vérifie `/up` toutes les cinq minutes et redémarre PHP-FPM/Nginx si nécessaire. Il consulte aussi `origin/main` et déploie uniquement les mises à jour en avance rapide lorsque le dépôt local est propre.
+
+```bash
+cd /var/www/moneyminder
+sudo bash deploy/debian/install-guardian.sh over /var/www/moneyminder 8081
+```
+
+Vérification et journaux :
+
+```bash
+systemctl list-timers moneyminder-guardian.timer
+sudo systemctl status moneyminder-guardian.timer --no-pager
+sudo journalctl -u moneyminder-guardian.service -n 100 --no-pager
+```
+
+Le déploiement automatique exécute Composer, reconstruit les ressources avec Node/NVM, applique les migrations et rétablit toujours le mode accessible. Une modification locale non commitée ou une divergence Git bloque volontairement le pull automatique.
