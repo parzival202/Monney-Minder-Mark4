@@ -8,6 +8,7 @@ use App\Models\ExpenseCategory;
 use App\Models\Transaction;
 use App\Services\Expenses\DefaultExpenseCategories;
 use App\Services\Finance\FinancialPositionService;
+use App\Services\Telegram\TelegramAlertService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,9 +44,10 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function store(StoreExpenseRequest $request): RedirectResponse
+    public function store(StoreExpenseRequest $request, TelegramAlertService $alerts): RedirectResponse
     {
-        $this->persist($request->user()->id, new Transaction(), $request->validated());
+        $expense = $this->persist($request->user()->id, new Transaction(), $request->validated());
+        $alerts->afterExpense($request->user(), $expense);
 
         return back()->with('success', 'Dépense enregistrée et disponible recalculé.');
     }
@@ -66,7 +68,7 @@ class ExpenseController extends Controller
         return back()->with('success', 'Dépense supprimée et disponible restauré.');
     }
 
-    private function persist(int $userId, Transaction $expense, array $data): void
+    private function persist(int $userId, Transaction $expense, array $data): Transaction
     {
         $category = ExpenseCategory::query()->where('user_id', $userId)->whereKey($data['expense_category_id'])->firstOrFail();
         $expense->fill([
@@ -77,6 +79,8 @@ class ExpenseController extends Controller
             'is_essential' => $category->is_essential || $data['purchase_nature'] === 'unplanned_necessary',
             'source' => 'web',
         ])->save();
+
+        return $expense;
     }
 
     private function ensureExpenseOwner(int $userId, Transaction $expense): void

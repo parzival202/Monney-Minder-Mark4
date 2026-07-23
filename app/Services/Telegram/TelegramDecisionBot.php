@@ -19,6 +19,7 @@ final class TelegramDecisionBot
         private ProjectAssessmentService $assessments,
         private DefaultExpenseCategories $defaultCategories,
         private FinancialPositionService $positions,
+        private TelegramAlertService $alerts,
     ) {}
 
     public function handle(TelegramConnection $connection, array $update): void
@@ -135,7 +136,7 @@ final class TelegramDecisionBot
             $category = $connection->user->expenseCategories()->find($values['expense_category_id'] ?? 0);
             $account = $connection->user->financialAccounts()->where('is_active', true)->orderByDesc('included_in_planning')->first();
             if (!$conversation || $conversation->state !== 'expense_nature' || !$category || !$account) return;
-            Transaction::query()->create([
+            $expense = Transaction::query()->create([
                 'user_id' => $connection->user_id, 'financial_account_id' => $account->id,
                 'expense_category_id' => $category->id, 'type' => 'expense', 'category' => $category->name,
                 'description' => $values['description'], 'amount' => $values['amount'], 'occurred_on' => today(),
@@ -146,6 +147,7 @@ final class TelegramDecisionBot
             $position = $this->positions->forUser($connection->user);
             $warning = $position['daily_available'] < $position['essential_daily_target'] ? "\n⚠️ Tu es maintenant sous ton besoin quotidien recommandé." : '';
             $this->client->send($connection, "✅ Dépense de {$this->money($values['amount'])} enregistrée.\nDisponible : {$this->money($position['spendable'])}\nPar jour : {$this->money($position['daily_available'])}{$warning}");
+            $this->alerts->afterExpense($connection->user, $expense);
             return;
         }
         if (!preg_match('/^(reserve|dismiss):(\d+)$/', $data, $matches)) return;
